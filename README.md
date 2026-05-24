@@ -1,6 +1,6 @@
 # Karan Dev Arora
 
-Personal site for Karan Dev Arora, built with Astro, MDX, Tailwind CSS, Pagefind, Satori, and self-hosted Source Serif 4 / JetBrains Mono fonts.
+Personal site for me, built with Astro, MDX, Tailwind CSS, Pagefind, Satori, and self-hosted Source Serif 4 / JetBrains Mono fonts.
 
 ## Quick Start
 
