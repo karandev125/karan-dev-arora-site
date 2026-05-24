@@ -52,12 +52,8 @@ const feedAlternates = feedAlternatesFor(Astro.url.pathname);
           return validThemes.includes(stored) ? stored : null;
         }
 
-        function systemTheme() {
-          return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        }
-
         function resolvedTheme() {
-          return storedTheme() ?? systemTheme();
+          return storedTheme() ?? "light";
         }
 
         function applyTheme(root, theme) {
@@ -118,12 +114,8 @@ const feedAlternates = feedAlternatesFor(Astro.url.pathname);
           return validThemes.includes(stored) ? stored : null;
         }
 
-        function systemTheme() {
-          return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        }
-
         function resolvedTheme() {
-          return storedTheme() ?? systemTheme();
+          return storedTheme() ?? "light";
         }
 
         function applyTheme(theme, persist) {
