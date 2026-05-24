@@ -14,6 +14,9 @@ const readingBooks = (await getCollection("bookshelf")).filter(
   (book) => book.data.status === "reading" && !book.data.draft,
 );
 const readingText = readingBooks.map((book) => `${book.data.title}, ${book.data.author}`).join("; ");
+const workingOn = now.data.workingOn ?? "second-year coursework.";
+const thinkingAbout = now.data.thinkingAbout ?? "what good engineering taste looks like, and how to develop it deliberately.";
+const where = now.data.where ?? "[your city]";
 ---
 
 <BaseLayout title="Now">
@@ -25,16 +28,10 @@ const readingText = readingBooks.map((book) => `${book.data.title}, ${book.data.
       )
     }
     <div class="prose">
-      <p>
-        <strong>Working on</strong> — second-year coursework. On the side, building backend projects in Go to
-        deepen my understanding of how systems actually work under the hood.
-      </p>
-      <p><strong>Reading</strong> — {readingText}</p>
-      <p>
-        <strong>Thinking about</strong> — what good engineering taste looks like, and how to develop it
-        deliberately.
-      </p>
-      <p><strong>Where</strong> — <em>[your city]</em>.</p>
+      <p><strong>Working on</strong> &mdash; {workingOn}</p>
+      <p><strong>Reading</strong> &mdash; {readingText}</p>
+      <p><strong>Thinking about</strong> &mdash; {thinkingAbout}</p>
+      <p><strong>Where</strong> &mdash; <em>{where}</em>.</p>
     </div>
   </article>
 </BaseLayout>

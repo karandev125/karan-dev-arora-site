@@ -24,8 +24,7 @@ npm run preview
 - `src/content/notes/` - shorter linked notes in Markdown.
 - `src/content/bookmarks/` - saved links with commentary.
 - `src/content/bookshelf/` - books, reading status, and optional book notes.
-- `src/content/projects-index.json` - the projects index.
-- `src/content/projects/` - optional project case studies in MDX.
+- `src/content/projects/` - project index entries and detail pages in MDX.
 - `src/content/pages/` - About, Uses, and Now singleton content.
 - `src/pages/` - Astro routes, feeds, OG images, search, and static pages.
 - `src/styles/global.css` - design tokens, typography, layout, print, and responsive styles.
@@ -134,32 +133,13 @@ Books with `status: reading` populate the home page and Now page reading lines a
 
 ## Add a Project
 
-Add an index entry to `src/content/projects-index.json`.
-
-```json
-[
-  {
-    "category": "live",
-    "name": "Example Project",
-    "year": 2026,
-    "description": "A concise description of the project.",
-    "links": [
-      { "label": "live", "href": "https://example.com" },
-      { "label": "repo", "href": "https://github.com/example/repo" }
-    ],
-    "caseStudy": "example-project"
-  }
-]
-```
-
-Valid `category` values are `live`, `past`, `experiments`, and `failures`.
-
-If `caseStudy` is set, create a matching MDX file in `src/content/projects/`, for example `src/content/projects/example-project.mdx`.
+Create an MDX file in `src/content/projects/`, for example `src/content/projects/example-project.mdx`.
 
 ```mdx
 ---
 title: Example Project
-description: A short case study description.
+description: A concise description of the project.
+category: experiments
 year: 2026
 role: solo
 status: live
@@ -175,7 +155,9 @@ draft: false
 Case study body goes here.
 ```
 
-Valid case-study `status` values are `live`, `archived`, and `wip`.
+Valid `category` values are `live`, `past`, `experiments`, and `failures`.
+
+Valid `status` values are `live`, `archived`, and `wip`.
 
 ## Update About, Uses, and Now
 

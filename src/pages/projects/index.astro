@@ -1,30 +1,26 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
-import projectsIndex from "../../content/projects-index.json";
+import { getCollection, type CollectionEntry } from "astro:content";
 
-type ProjectCategory = "live" | "past" | "experiments" | "failures";
+type Project = CollectionEntry<"projects">;
+type ProjectCategory = Project["data"]["category"];
 
-interface ProjectIndexEntry {
-  category: ProjectCategory;
-  name: string;
-  year: number;
-  description: string;
-  links: { label: string; href: string }[];
-  caseStudy?: string;
-}
-
-const projects = projectsIndex as ProjectIndexEntry[];
 const categories: { id: ProjectCategory; label: string }[] = [
   { id: "live", label: "Live" },
   { id: "past", label: "Past" },
   { id: "experiments", label: "Experiments" },
   { id: "failures", label: "Failures" },
 ];
+
+const projects = (await getCollection("projects"))
+  .filter((project) => !project.data.draft)
+  .sort((a, b) => b.data.year - a.data.year || a.data.title.localeCompare(b.data.title));
+
 const groupedProjects = categories
   .map((category) => ({
     ...category,
-    projects: projects.filter((project) => project.category === category.id),
+    projects: projects.filter((project) => project.data.category === category.id),
   }))
   .filter((group) => group.projects.length > 0);
 ---
@@ -46,15 +42,15 @@ const groupedProjects = categories
                 {group.projects.map((project) => (
                   <article class="project-entry">
                     <div class="project-entry__heading">
-                      <h3>{project.name}</h3>
-                      <span>{project.year}</span>
+                      <h3>{project.data.title}</h3>
+                      <span>{project.data.year}</span>
                     </div>
-                    <p>{project.description}</p>
+                    <p>{project.data.description}</p>
                     <div class="project-entry__links">
-                      {project.links.map((link) => (
-                        <a href={link.href}>{link.label} ↗</a>
+                      {project.data.links.map((link) => (
+                        <a href={link.href}>{link.label} &nearr;</a>
                       ))}
-                      {project.caseStudy && <a href={`/projects/${project.caseStudy}`}>case study →</a>}
+                      <a href={`/projects/${project.slug}`}>details &rarr;</a>
                     </div>
                   </article>
                 ))}

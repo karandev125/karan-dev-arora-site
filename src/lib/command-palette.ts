@@ -1,7 +1,5 @@
 import { getCollection } from "astro:content";
 
-import projectsIndex from "../content/projects-index.json";
-
 export type CommandCategory = "Thoughts" | "Notes" | "Bookmarks" | "Projects" | "Books";
 
 export interface CommandPaletteItem {
@@ -10,15 +8,6 @@ export interface CommandPaletteItem {
   category: CommandCategory;
   snippet: string;
   keywords: string;
-}
-
-interface ProjectIndexEntry {
-  category: "live" | "past" | "experiments" | "failures";
-  name: string;
-  year: number;
-  description: string;
-  links: { label: string; href: string }[];
-  caseStudy?: string;
 }
 
 function normalize(value: string): string {
@@ -62,12 +51,21 @@ export async function getCommandPaletteItems(): Promise<CommandPaletteItem[]> {
     snippet: book.data.author,
     keywords: normalize([book.data.title, book.data.author, book.data.status, book.data.tags?.join(" ")].filter(Boolean).join(" ")),
   }));
-  const projects = (projectsIndex as ProjectIndexEntry[]).map((project) => ({
-    title: project.name,
-    url: project.caseStudy ? `/projects/${project.caseStudy}` : "/projects",
+  const projects = (await getCollection("projects")).filter((project) => !project.data.draft).map((project) => ({
+    title: project.data.title,
+    url: `/projects/${project.slug}`,
     category: "Projects" as const,
-    snippet: project.description,
-    keywords: normalize([project.name, project.description, project.category, String(project.year)].join(" ")),
+    snippet: project.data.description,
+    keywords: normalize(
+      [
+        project.data.title,
+        project.data.description,
+        project.data.category,
+        project.data.status,
+        project.data.tech.join(" "),
+        String(project.data.year),
+      ].join(" "),
+    ),
   }));
 
   return [...thoughts, ...notes, ...bookmarks, ...projects, ...books];

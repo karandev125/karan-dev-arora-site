@@ -39,6 +39,7 @@ const projects = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
+    category: z.enum(["live", "past", "experiments", "failures"]),
     year: z.number(),
     role: z.string(),
     status: z.enum(["live", "archived", "wip"]),
@@ -78,6 +79,9 @@ const pages = defineCollection({
   schema: z.object({
     title: z.string(),
     updatedAt: z.date().optional(),
+    workingOn: z.string().optional(),
+    thinkingAbout: z.string().optional(),
+    where: z.string().optional(),
   }),
 });
 

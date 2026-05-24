@@ -244,25 +244,13 @@ Books without notes are list-only — no detail page generated. Books with `hasN
 
 ### 4.3 Projects Collection
 
-**Index entries** (`src/content/projects-index.json`):
-
-```ts
-{
-  category: "live" | "past" | "experiments" | "failures",
-  name: string,
-  year: number,
-  description: string,
-  links: { label: string, href: string }[],
-  caseStudy: string | undefined,
-}[]
-```
-
-**Case studies** (`src/content/projects/*.mdx`):
+**Project entries and case studies** (`src/content/projects/*.mdx`):
 
 ```ts
 {
   title: string,
   description: string,
+  category: "live" | "past" | "experiments" | "failures",
   year: number,
   role: string,
   status: "live" | "archived" | "wip",
@@ -408,13 +396,13 @@ Single-page essay layout, max-width `680px`.
 
 - H1: `Projects`
 - Intro: *"Things I've made. Some live, some learning."*
-- Sections from the JSON file, grouped by category in order: `live`, `past`, `experiments`, `failures`
+- Sections from project MDX frontmatter, grouped by category in order: `live`, `past`, `experiments`, `failures`
 - Section headers: mono uppercase `--text-xs`, `--color-text-subtle`, letter-spacing `0.1em`
 - Each project block:
   - H2: project name, with year right-aligned in mono `--text-sm` `--color-text-muted`
   - One paragraph in serif body
-  - Below paragraph, links in mono `--text-sm`: `live ↗  ·  repo ↗  ·  case study →`
-  - `case study →` links to `/projects/[slug]` if `caseStudy` is set
+  - Below paragraph, links in mono `--text-sm`: `live ->  repo ->  details ->`
+  - `details ->` links to `/projects/[slug]`
 - If zero projects: `Nothing here yet.`
 
 ### 5.7 Case Study (`/projects/[slug]`)
@@ -707,7 +695,6 @@ src/
       about.mdx
       uses.mdx
       now.mdx
-    projects-index.json
   layouts/
     BaseLayout.astro
     ProseLayout.astro
@@ -810,7 +797,7 @@ Create one example file in each collection so the structure is visible:
 - `src/content/notes/example.md` — `draft: true` placeholder
 - `src/content/bookmarks/example.md` — `draft: true` placeholder
 - `src/content/bookshelf/example.md` — `draft: true` placeholder
-- `src/content/projects-index.json` — empty array `[]`
+- `src/content/projects/example.mdx` — `draft: true` placeholder
 - `src/content/pages/about.mdx` — with the placeholder copy from section 5.11
 - `src/content/pages/uses.mdx` — with placeholder copy
 - `src/content/pages/now.mdx` — with placeholder copy from section 5.12
