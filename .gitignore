@@ -1,0 +1,21 @@
+.vercel
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.astro/
+
+# Local logs and temporary output
+*.log
+*.err
+*.out
+.codex-dev-server.*.log
+.playwright-cli/
+output/
+phase1-screenshots/
+
+# Environment files
+.env
+.env.*

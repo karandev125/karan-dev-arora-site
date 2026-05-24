@@ -1,0 +1,41 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+import { getCollection, type CollectionEntry } from "astro:content";
+
+type Project = CollectionEntry<"projects">;
+
+interface Props {
+  project: Project;
+}
+
+export async function getStaticPaths() {
+  const projects = (await getCollection("projects")).filter((project) => !project.data.draft);
+
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await project.render();
+---
+
+<BaseLayout title={project.data.title} description={project.data.description}>
+  <article class="thought-article" aria-labelledby="page-title">
+    <header class="thought-header">
+      <h1 id="page-title" class="page-title">{project.data.title}</h1>
+      <p class="thought-meta">{project.data.year} · {project.data.role} · {project.data.status}</p>
+      <p class="project-meta-links">
+        {project.data.links.map((link) => <a href={link.href}>{link.label} ↗</a>)}
+      </p>
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <a class="thought-back" href="/projects">← Projects</a>
+  </article>
+</BaseLayout>

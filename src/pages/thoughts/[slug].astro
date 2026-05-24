@@ -1,0 +1,98 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+
+import { formatDate } from "../../lib/date";
+import { readingTime, wordCount } from "../../lib/reading-time";
+
+type Thought = CollectionEntry<"thoughts">;
+
+interface Props {
+  post: Thought;
+}
+
+export async function getStaticPaths() {
+  const posts = (await getCollection("thoughts")).filter((post) => !post.data.draft);
+
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await post.render();
+const words = wordCount(post.body);
+const showToc = post.data.toc === true || words > 1500;
+const tocHeadings = headings
+  .map((heading) => ({
+    ...heading,
+    text: heading.text.replace(/^#\s*/, ""),
+  }))
+  .filter(
+    (heading) =>
+      (heading.depth === 2 || heading.depth === 3) &&
+      heading.slug !== "footnotes" &&
+      heading.text !== "Footnotes",
+  );
+const updatedAt = post.data.updatedAt;
+const showUpdated =
+  updatedAt !== undefined &&
+  Math.abs(updatedAt.getTime() - post.data.publishedAt.getTime()) > 7 * 24 * 60 * 60 * 1000;
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <article class="thought-article" aria-labelledby="page-title">
+    <header class="thought-header">
+      <h1 id="page-title" class="page-title" transition:name={`thought-title-${post.slug}`}>
+        {post.data.title}
+      </h1>
+      <p class="thought-meta">
+        <time datetime={post.data.publishedAt.toISOString()}>{formatDate(post.data.publishedAt)}</time>
+        <span aria-hidden="true"> · </span>
+        <span>{readingTime(post.body)}</span>
+        {
+          showUpdated && updatedAt && (
+            <>
+              <span aria-hidden="true"> · </span>
+              <span>updated {formatDate(updatedAt)}</span>
+            </>
+          )
+        }
+      </p>
+    </header>
+
+    {
+      showToc && tocHeadings.length > 0 && (
+        <>
+          <details class="toc toc-mobile">
+            <summary>Contents</summary>
+            <ol>
+              {tocHeadings.map((heading) => (
+                <li class={`depth-${heading.depth}`}>
+                  <a href={`#${heading.slug}`}>{heading.text}</a>
+                </li>
+              ))}
+            </ol>
+          </details>
+          <aside class="toc toc-desktop" aria-label="Table of contents">
+            <p class="toc__title">Contents</p>
+            <ol>
+              {tocHeadings.map((heading) => (
+                <li class={`depth-${heading.depth}`}>
+                  <a href={`#${heading.slug}`}>{heading.text}</a>
+                </li>
+              ))}
+            </ol>
+          </aside>
+        </>
+      )
+    }
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <a class="thought-back" href="/thoughts">← Thoughts</a>
+  </article>
+</BaseLayout>

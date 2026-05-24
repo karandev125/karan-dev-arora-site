@@ -1,0 +1,40 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { feedUrl, getAllFeedMeta, type FeedName } from "../lib/feed-data";
+
+const descriptions: Record<FeedName, string> = {
+  all: "Everything public on the site in one stream.",
+  thoughts: "Essays and longer prose.",
+  notes: "Working notes and linked ideas.",
+  bookmarks: "Saved links with short commentary.",
+  bookshelf: "Books as they are started or finished.",
+};
+
+const feeds = getAllFeedMeta();
+---
+
+<BaseLayout title="Feeds">
+  <section class="page-section" aria-labelledby="page-title">
+    <h1 id="page-title" class="page-title">Feeds</h1>
+    <p class="page-intro">RSS and JSON feeds for the site.</p>
+
+    <div class="feed-list">
+      {
+        feeds.map((feed) => (
+          <article class="feed-entry">
+            <h2>{feed.name === "all" ? "All" : feed.name}</h2>
+            <p>{descriptions[feed.name]}</p>
+            <div class="feed-url-row">
+              <code>{feedUrl(feed.rssPath)}</code>
+              <button type="button" data-copy-text={feedUrl(feed.rssPath)}>copy</button>
+            </div>
+            <div class="feed-url-row">
+              <code>{feedUrl(feed.jsonPath)}</code>
+              <button type="button" data-copy-text={feedUrl(feed.jsonPath)}>copy</button>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,68 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+import projectsIndex from "../../content/projects-index.json";
+
+type ProjectCategory = "live" | "past" | "experiments" | "failures";
+
+interface ProjectIndexEntry {
+  category: ProjectCategory;
+  name: string;
+  year: number;
+  description: string;
+  links: { label: string; href: string }[];
+  caseStudy?: string;
+}
+
+const projects = projectsIndex as ProjectIndexEntry[];
+const categories: { id: ProjectCategory; label: string }[] = [
+  { id: "live", label: "Live" },
+  { id: "past", label: "Past" },
+  { id: "experiments", label: "Experiments" },
+  { id: "failures", label: "Failures" },
+];
+const groupedProjects = categories
+  .map((category) => ({
+    ...category,
+    projects: projects.filter((project) => project.category === category.id),
+  }))
+  .filter((group) => group.projects.length > 0);
+---
+
+<BaseLayout title="Projects">
+  <section class="page-section" aria-labelledby="page-title">
+    <h1 id="page-title" class="page-title">Projects</h1>
+    <p class="page-intro">Things I've made. Some live, some learning.</p>
+
+    {
+      projects.length === 0 ? (
+        <p class="placeholder-list">Nothing here yet.</p>
+      ) : (
+        <div class="stacked-sections">
+          {groupedProjects.map((group) => (
+            <section aria-labelledby={`projects-${group.id}`}>
+              <h2 id={`projects-${group.id}`} class="section-label">{group.label}</h2>
+              <div class="project-list">
+                {group.projects.map((project) => (
+                  <article class="project-entry">
+                    <div class="project-entry__heading">
+                      <h3>{project.name}</h3>
+                      <span>{project.year}</span>
+                    </div>
+                    <p>{project.description}</p>
+                    <div class="project-entry__links">
+                      {project.links.map((link) => (
+                        <a href={link.href}>{link.label} ↗</a>
+                      ))}
+                      {project.caseStudy && <a href={`/projects/${project.caseStudy}`}>case study →</a>}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>

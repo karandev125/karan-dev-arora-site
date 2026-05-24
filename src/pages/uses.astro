@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getEntry } from "astro:content";
+
+import { formatDate } from "../lib/date";
+
+const uses = await getEntry("pages", "uses");
+
+if (!uses) {
+  throw new Error("Missing uses page content.");
+}
+
+const { Content } = await uses.render();
+---
+
+<BaseLayout title="Uses">
+  <article class="page-section" aria-labelledby="page-title">
+    <h1 id="page-title" class="page-title">Uses</h1>
+    <p class="page-intro">Tools I reach for. Updated when something changes.</p>
+    {uses.data.updatedAt && <p class="page-meta">Last updated {formatDate(uses.data.updatedAt)}</p>}
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

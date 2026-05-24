@@ -1,0 +1,32 @@
+---
+import { SITE } from "../config";
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="site-footer__inner shell-inner">
+    <div class="footer-row" aria-label="Footer navigation">
+      {
+        SITE.footerNav.map((item, index) => (
+          <>
+            {index > 0 && <span aria-hidden="true">·</span>}
+            <a href={item.href}>{item.label}</a>
+          </>
+        ))
+      }
+      <span aria-hidden="true">·</span>
+      <span>© {year} {SITE.author}</span>
+    </div>
+
+    <div class="footer-row" aria-label="Social links">
+      <a href={SITE.socials.github}>github</a>
+      <span aria-hidden="true">·</span>
+      <a href={SITE.socials.twitter}>x</a>
+      <span aria-hidden="true">·</span>
+      <a href={SITE.socials.linkedin}>linkedin</a>
+      <span aria-hidden="true">·</span>
+      <a href={`mailto:${SITE.email}`}>email</a>
+    </div>
+  </div>
+</footer>

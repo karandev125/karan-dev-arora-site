@@ -1,0 +1,31 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SITE } from "../config";
+import { getEntry } from "astro:content";
+
+const about = await getEntry("pages", "about");
+
+if (!about) {
+  throw new Error("Missing about page content.");
+}
+
+const { Content } = await about.render();
+---
+
+<BaseLayout title="About">
+  <article class="page-section" aria-labelledby="page-title">
+    <h1 id="page-title" class="page-title">About</h1>
+    <div class="prose">
+      <Content />
+    </div>
+    <div class="social-row" aria-label="Social links">
+      <a href={SITE.socials.github}>github</a>
+      <span aria-hidden="true">·</span>
+      <a href={SITE.socials.twitter}>x</a>
+      <span aria-hidden="true">·</span>
+      <a href={SITE.socials.linkedin}>linkedin</a>
+      <span aria-hidden="true">·</span>
+      <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+    </div>
+  </article>
+</BaseLayout>

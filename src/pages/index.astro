@@ -1,0 +1,36 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SITE } from "../config";
+import { getCollection } from "astro:content";
+
+const currentBooks = (await getCollection("bookshelf")).filter(
+  (book) => book.data.status === "reading" && !book.data.draft,
+);
+const currentBook = currentBooks[0];
+---
+
+<BaseLayout>
+  <section class="home" aria-labelledby="home-title">
+    <h1 id="home-title">{SITE.name}</h1>
+    <p class="home__bio">
+      Karan Dev Arora — second-year B.Tech student. I'm interested in computer science, AI, backend engineering, and Go. I write here about engineering, philosophy, and whatever else holds my attention. Outside of code, I'm probably watching football.
+    </p>
+    <nav class="home__nav" aria-label="Home navigation">
+      {
+        SITE.nav.map((item, index) => (
+          <>
+            {index > 0 && <span aria-hidden="true">·</span>}
+            <a href={item.href}>{item.label}</a>
+          </>
+        ))
+      }
+    </nav>
+    {
+      currentBook && (
+        <p class="currently">
+          Currently reading: {currentBook.data.title}, {currentBook.data.author}
+        </p>
+      )
+    }
+  </section>
+</BaseLayout>

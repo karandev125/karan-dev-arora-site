@@ -1,0 +1,44 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+import { getCollection, type CollectionEntry } from "astro:content";
+import { formatDate } from "../../lib/date";
+
+type Book = CollectionEntry<"bookshelf">;
+
+interface Props {
+  book: Book;
+}
+
+export async function getStaticPaths() {
+  const books = (await getCollection("bookshelf")).filter((book) => !book.data.draft && book.data.hasNotes);
+
+  return books.map((book) => ({
+    params: { slug: book.slug },
+    props: { book },
+  }));
+}
+
+const { book } = Astro.props;
+const { Content } = await book.render();
+const finished = book.data.finishedAt ? `finished ${formatDate(book.data.finishedAt)}` : undefined;
+const started = book.data.startedAt ? `started ${formatDate(book.data.startedAt)}` : undefined;
+const metadata = [book.data.author, finished ?? started, book.data.rating].filter(Boolean).join(" · ");
+---
+
+<BaseLayout title={book.data.title}>
+  <article class="thought-article book-detail" aria-labelledby="page-title">
+    <header class="thought-header">
+      <h1 id="page-title" class="page-title">{book.data.title}</h1>
+      <p class="thought-meta">{metadata}</p>
+    </header>
+
+    {book.data.cover && <img class="book-cover" src={book.data.cover} alt="" loading="lazy" />}
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <a class="thought-back" href="/bookshelf">← Bookshelf</a>
+  </article>
+</BaseLayout>

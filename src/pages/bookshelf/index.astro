@@ -1,0 +1,158 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+import { getCollection, type CollectionEntry } from "astro:content";
+import { formatDate } from "../../lib/date";
+
+type Book = CollectionEntry<"bookshelf">;
+
+const currentYear = new Date().getFullYear();
+const books = (await getCollection("bookshelf")).filter((book) => !book.data.draft);
+
+const byFinishedDateDesc = (a: Book, b: Book) =>
+  (b.data.finishedAt?.getTime() ?? 0) - (a.data.finishedAt?.getTime() ?? 0);
+
+const readingBooks = books
+  .filter((book) => book.data.status === "reading")
+  .sort((a, b) => (b.data.startedAt?.getTime() ?? 0) - (a.data.startedAt?.getTime() ?? 0));
+const readBooks = books.filter((book) => book.data.status === "read" && book.data.finishedAt).sort(byFinishedDateDesc);
+const currentYearBooks = readBooks.filter((book) => book.data.finishedAt?.getFullYear() === currentYear);
+const earlierBooks = readBooks.filter((book) => (book.data.finishedAt?.getFullYear() ?? currentYear) < currentYear);
+const abandonedBooks = books.filter((book) => book.data.status === "abandoned");
+
+const earlierGroups = [...new Set(earlierBooks.map((book) => book.data.finishedAt?.getFullYear()).filter(Boolean))]
+  .sort((a, b) => Number(b) - Number(a))
+  .map((year) => ({
+    year: Number(year),
+    books: earlierBooks.filter((book) => book.data.finishedAt?.getFullYear() === year),
+  }));
+
+function bookHref(book: Book): string | undefined {
+  return book.data.hasNotes ? `/bookshelf/${book.slug}` : undefined;
+}
+
+function ratingMark(book: Book): string {
+  if (book.data.rating === "recommended") {
+    return "★";
+  }
+
+  if (book.data.rating === "formative") {
+    return "★★";
+  }
+
+  return "";
+}
+---
+
+<BaseLayout title="Bookshelf" wide>
+  <section class="page-section" aria-labelledby="page-title">
+    <h1 id="page-title" class="page-title">
+      Bookshelf{books.length > 0 && <span class="mono"> ({books.length})</span>}
+    </h1>
+    <p class="page-intro">Books I've read, mostly remembered.</p>
+
+    {
+      books.length === 0 ? (
+        <p class="placeholder-list">Nothing here yet.</p>
+      ) : (
+        <div class="stacked-sections">
+          {readingBooks.length > 0 && (
+            <section aria-labelledby="books-reading">
+              <h2 id="books-reading" class="section-label">Reading</h2>
+              <div class="book-list">
+                {readingBooks.map((book) => (
+                  <div class="book-row">
+                    <div class="book-row__main">
+                      {bookHref(book) ? (
+                        <a href={bookHref(book)}>{book.data.title}</a>
+                      ) : (
+                        <span>{book.data.title}</span>
+                      )}
+                      <span class="book-row__author"> — {book.data.author}</span>
+                    </div>
+                    {book.data.startedAt && (
+                      <span class="book-row__meta">started {formatDate(book.data.startedAt)}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {currentYearBooks.length > 0 && (
+            <section aria-labelledby="books-current-year">
+              <h2 id="books-current-year" class="section-label">{currentYear}</h2>
+              <div class="book-list">
+                {currentYearBooks.map((book) => (
+                  <div class="book-row">
+                    <div class="book-row__main">
+                      {bookHref(book) ? (
+                        <a href={bookHref(book)}>{book.data.title}</a>
+                      ) : (
+                        <span>{book.data.title}</span>
+                      )}
+                      <span class="book-row__author"> — {book.data.author}</span>
+                    </div>
+                    <span class="book-row__meta">
+                      {book.data.finishedAt && formatDate(book.data.finishedAt)}
+                      {ratingMark(book) && <span class="rating-mark"> {ratingMark(book)}</span>}
+                      {book.data.hasNotes && <span aria-label="has notes"> →</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {earlierGroups.length > 0 && (
+            <section aria-labelledby="books-earlier">
+              <h2 id="books-earlier" class="section-label">Earlier</h2>
+              <div class="year-groups">
+                {earlierGroups.map((group) => (
+                  <details class="year-group">
+                    <summary>{group.year} ({group.books.length})</summary>
+                    <div class="book-list">
+                      {group.books.map((book) => (
+                        <div class="book-row">
+                          <div class="book-row__main">
+                            {bookHref(book) ? (
+                              <a href={bookHref(book)}>{book.data.title}</a>
+                            ) : (
+                              <span>{book.data.title}</span>
+                            )}
+                            <span class="book-row__author"> — {book.data.author}</span>
+                          </div>
+                          <span class="book-row__meta">
+                            {book.data.finishedAt && formatDate(book.data.finishedAt)}
+                            {ratingMark(book) && <span class="rating-mark"> {ratingMark(book)}</span>}
+                            {book.data.hasNotes && <span aria-label="has notes"> →</span>}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {abandonedBooks.length > 0 && (
+            <details class="year-group abandoned-books">
+              <summary>Abandoned ({abandonedBooks.length})</summary>
+              <div class="book-list">
+                {abandonedBooks.map((book) => (
+                  <div class="book-row">
+                    <div class="book-row__main">
+                      <span>{book.data.title}</span>
+                      <span class="book-row__author"> — {book.data.author}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>

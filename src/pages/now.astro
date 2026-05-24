@@ -1,0 +1,40 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection, getEntry } from "astro:content";
+
+import { formatDate } from "../lib/date";
+
+const now = await getEntry("pages", "now");
+
+if (!now) {
+  throw new Error("Missing now page content.");
+}
+
+const readingBooks = (await getCollection("bookshelf")).filter(
+  (book) => book.data.status === "reading" && !book.data.draft,
+);
+const readingText = readingBooks.map((book) => `${book.data.title}, ${book.data.author}`).join("; ");
+---
+
+<BaseLayout title="Now">
+  <article class="page-section" aria-labelledby="page-title">
+    <h1 id="page-title" class="page-title">Now</h1>
+    {
+      now.data.updatedAt && (
+        <p class="page-intro">What I'm focused on, as of {formatDate(now.data.updatedAt)}.</p>
+      )
+    }
+    <div class="prose">
+      <p>
+        <strong>Working on</strong> — second-year coursework. On the side, building backend projects in Go to
+        deepen my understanding of how systems actually work under the hood.
+      </p>
+      <p><strong>Reading</strong> — {readingText}</p>
+      <p>
+        <strong>Thinking about</strong> — what good engineering taste looks like, and how to develop it
+        deliberately.
+      </p>
+      <p><strong>Where</strong> — <em>[your city]</em>.</p>
+    </div>
+  </article>
+</BaseLayout>

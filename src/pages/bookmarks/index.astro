@@ -1,0 +1,60 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+import { getCollection, type CollectionEntry } from "astro:content";
+import { formatDate } from "../../lib/date";
+
+type Bookmark = CollectionEntry<"bookmarks">;
+
+const bookmarks = (await getCollection("bookmarks"))
+  .filter((bookmark) => !bookmark.data.draft)
+  .sort((a, b) => b.data.savedAt.getTime() - a.data.savedAt.getTime());
+
+function sourceLabel(bookmark: Bookmark): string {
+  return [bookmark.data.author, bookmark.data.source].filter(Boolean).join(" · ");
+}
+
+function hostname(bookmark: Bookmark): string {
+  return new URL(bookmark.data.url).hostname.replace(/^www\./, "");
+}
+
+function faviconUrl(bookmark: Bookmark): string {
+  return new URL("/favicon.ico", bookmark.data.url).toString();
+}
+---
+
+<BaseLayout title="Bookmarks" wide>
+  <section class="page-section" aria-labelledby="page-title">
+    <h1 id="page-title" class="page-title">
+      Bookmarks{bookmarks.length > 0 && <span class="mono"> ({bookmarks.length})</span>}
+    </h1>
+    <p class="page-intro">Things worth keeping. Curated, not collected.</p>
+
+    {
+      bookmarks.length === 0 ? (
+        <p class="placeholder-list">Nothing here yet.</p>
+      ) : (
+        <div class="bookmark-list">
+          {bookmarks.map((bookmark) => (
+            <article class="bookmark-entry">
+              <h2>
+                <a href={bookmark.data.url}>{bookmark.data.title} ↗</a>
+              </h2>
+              <div class="bookmark-entry__meta">
+                <span>
+                  <img class="bookmark-favicon" src={faviconUrl(bookmark)} alt="" loading="lazy" data-optional-image />
+                  {sourceLabel(bookmark) || hostname(bookmark)}
+                </span>
+                <time datetime={bookmark.data.savedAt.toISOString()}>{formatDate(bookmark.data.savedAt)}</time>
+              </div>
+              <p>{bookmark.body.trim()}</p>
+              <div class="bookmark-entry__tags">
+                {bookmark.data.tags.map((tag) => <a href={`/bookmarks/tag/${tag}`}>#{tag}</a>)}
+              </div>
+            </article>
+          ))}
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>

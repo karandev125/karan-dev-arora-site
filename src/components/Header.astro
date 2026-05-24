@@ -1,0 +1,30 @@
+---
+import { SITE } from "../config";
+import ThemeToggle from "./ThemeToggle.astro";
+---
+
+<header class="site-header" aria-label="Site header">
+  <div class="site-header__inner shell-inner">
+    <a class="site-name" href="/">{SITE.shortName}</a>
+
+    <nav class="site-nav" aria-label="Primary navigation">
+      {
+        SITE.nav.map((item, index) => (
+          <>
+            {index > 0 && <span class="nav-separator" aria-hidden="true">·</span>}
+            <a href={item.href}>{item.label}</a>
+          </>
+        ))
+      }
+    </nav>
+
+    <details class="mobile-nav">
+      <summary aria-label="Open navigation">≡</summary>
+      <nav class="mobile-nav__panel" aria-label="Mobile navigation">
+        {SITE.nav.map((item) => <a href={item.href}>{item.label}</a>)}
+      </nav>
+    </details>
+
+    <ThemeToggle />
+  </div>
+</header>

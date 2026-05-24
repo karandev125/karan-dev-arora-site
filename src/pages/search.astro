@@ -1,0 +1,92 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Search">
+  <section class="page-section" aria-labelledby="page-title">
+    <h1 id="page-title" class="page-title">Search</h1>
+    <p class="page-intro">Search the public pages on the site.</p>
+
+    <form class="search-form" action="/search" method="get" data-search-form>
+      <label class="sr-only" for="site-search">Search query</label>
+      <input id="site-search" name="q" type="search" autocomplete="off" data-search-input />
+      <button type="submit">search</button>
+    </form>
+
+    <div class="search-results" data-search-results>
+      <noscript>
+        <p class="page-copy">Search uses the generated Pagefind index. Enable JavaScript to search this static site.</p>
+      </noscript>
+    </div>
+  </section>
+
+  <script is:inline>
+    (() => {
+      const form = document.querySelector("[data-search-form]");
+      const input = document.querySelector("[data-search-input]");
+      const results = document.querySelector("[data-search-results]");
+
+      if (!(form instanceof HTMLFormElement) || !(input instanceof HTMLInputElement) || !(results instanceof HTMLElement)) {
+        return;
+      }
+
+      async function renderSearch(query) {
+        results.textContent = "";
+
+        if (!query) {
+          return;
+        }
+
+        try {
+          const pagefind = await import("/pagefind/pagefind.js");
+          const search = await pagefind.search(query);
+
+          if (search.results.length === 0) {
+            results.innerHTML = `<p class="placeholder-list">Nothing found.</p>`;
+            return;
+          }
+
+          const list = document.createElement("div");
+          list.className = "pagefind-results";
+          const resolved = await Promise.all(search.results.slice(0, 12).map((result) => result.data()));
+
+          resolved.forEach((result) => {
+            const link = document.createElement("a");
+            link.className = "pagefind-result";
+            link.href = result.url;
+            link.innerHTML = `<span class="pagefind-result__title"></span><span class="pagefind-result__excerpt"></span>`;
+            const title = link.querySelector(".pagefind-result__title");
+            const excerpt = link.querySelector(".pagefind-result__excerpt");
+
+            if (title) {
+              title.textContent = result.meta.title || result.url;
+            }
+
+            if (excerpt) {
+              excerpt.innerHTML = result.excerpt;
+            }
+
+            list.appendChild(link);
+          });
+
+          results.appendChild(list);
+        } catch {
+          results.innerHTML = `<p class="page-copy">Search index is available after running the production build.</p>`;
+        }
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const initialQuery = params.get("q") ?? "";
+      input.value = initialQuery;
+      renderSearch(initialQuery);
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const query = input.value.trim();
+        const url = query ? `/search?q=${encodeURIComponent(query)}` : "/search";
+        window.history.replaceState(null, "", url);
+        renderSearch(query);
+      });
+    })();
+  </script>
+</BaseLayout>

@@ -1,0 +1,556 @@
+---
+import { ClientRouter } from "astro:transitions";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { SITE } from "../config";
+import { feedAlternatesFor } from "../lib/feed-links";
+import jetBrainsMonoLatin from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url";
+import sourceSerifLatin from "@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?url";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  wide?: boolean;
+}
+
+const {
+  title,
+  description = SITE.description,
+  wide = false,
+} = Astro.props;
+
+const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
+const canonical = new URL(Astro.url.pathname, SITE.url).toString();
+const feedAlternates = feedAlternatesFor(Astro.url.pathname);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preload" href={sourceSerifLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={jetBrainsMonoLatin} as="font" type="font/woff2" crossorigin />
+    {
+      feedAlternates.map((feed) => (
+        <link rel="alternate" type={feed.type} title={feed.title} href={feed.href} />
+      ))
+    }
+    <title>{pageTitle}</title>
+    <script is:inline>
+      (() => {
+        const storageKey = "theme";
+        const validThemes = ["light", "dark"];
+
+        function storedTheme() {
+          const stored = localStorage.getItem(storageKey);
+          return validThemes.includes(stored) ? stored : null;
+        }
+
+        function systemTheme() {
+          return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+
+        function resolvedTheme() {
+          return storedTheme() ?? systemTheme();
+        }
+
+        function applyTheme(root, theme) {
+          root.dataset.theme = theme;
+          root.style.colorScheme = theme;
+        }
+
+        applyTheme(document.documentElement, resolvedTheme());
+
+        document.addEventListener("astro:before-swap", (event) => {
+          applyTheme(event.newDocument.documentElement, resolvedTheme());
+        });
+
+        document.addEventListener("astro:after-swap", () => {
+          applyTheme(document.documentElement, resolvedTheme());
+        });
+      })();
+    </script>
+    <ClientRouter />
+  </head>
+  <body>
+    <div class="site-shell">
+      <a class="skip-link" href="#main">Skip to content</a>
+      <Header />
+      <main id="main" class:list={["site-main", wide ? "shell-inner" : "prose-width"]}>
+        <slot />
+      </main>
+      <Footer />
+    </div>
+    <div class="command-palette" data-command-palette hidden>
+      <div class="command-palette__backdrop" data-command-close></div>
+      <section
+        class="command-palette__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="command-palette-title"
+      >
+        <h2 id="command-palette-title" class="sr-only">Command palette</h2>
+        <input
+          class="command-palette__input"
+          data-command-input
+          type="search"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Search"
+          aria-label="Search the site"
+        />
+        <div class="command-palette__results" data-command-results></div>
+      </section>
+    </div>
+    <script is:inline>
+      (() => {
+        const storageKey = "theme";
+        const validThemes = ["light", "dark"];
+
+        function storedTheme() {
+          const stored = localStorage.getItem(storageKey);
+          return validThemes.includes(stored) ? stored : null;
+        }
+
+        function systemTheme() {
+          return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+
+        function resolvedTheme() {
+          return storedTheme() ?? systemTheme();
+        }
+
+        function applyTheme(theme, persist) {
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+
+          if (persist) {
+            localStorage.setItem(storageKey, theme);
+          }
+
+          document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+            const isDark = theme === "dark";
+            button.setAttribute("aria-pressed", String(isDark));
+            button.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme");
+          });
+        }
+
+        function currentTheme() {
+          const theme = document.documentElement.dataset.theme;
+          return validThemes.includes(theme) ? theme : resolvedTheme();
+        }
+
+        function bindThemeToggle() {
+          document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+            if (button instanceof HTMLElement && button.dataset.themeBound === "true") {
+              return;
+            }
+
+            if (button instanceof HTMLElement) {
+              button.dataset.themeBound = "true";
+            }
+
+            button.addEventListener("click", () => {
+              applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
+            });
+          });
+
+          applyTheme(resolvedTheme(), false);
+        }
+
+        bindThemeToggle();
+        document.addEventListener("astro:page-load", bindThemeToggle);
+      })();
+    </script>
+    <script is:inline>
+      (() => {
+        async function copyText(text) {
+          if (navigator.clipboard && window.isSecureContext) {
+            try {
+              await navigator.clipboard.writeText(text);
+              return true;
+            } catch {
+            }
+          }
+
+          const textarea = document.createElement("textarea");
+          textarea.value = text;
+          textarea.setAttribute("readonly", "true");
+          textarea.style.position = "fixed";
+          textarea.style.top = "-1000px";
+          textarea.style.left = "-1000px";
+          document.body.appendChild(textarea);
+          textarea.select();
+          const execCommand = Reflect.get(document, "execCommand");
+          const copied =
+            typeof execCommand === "function" ? Reflect.apply(execCommand, document, ["copy"]) : false;
+          textarea.remove();
+          return copied;
+        }
+
+        function bindHeadingAnchors(root) {
+          root.querySelectorAll("[data-heading-anchor]").forEach((anchor) => {
+            if (anchor instanceof HTMLElement && anchor.dataset.bound === "true") {
+              return;
+            }
+
+            if (anchor instanceof HTMLElement) {
+              anchor.dataset.bound = "true";
+            }
+
+            anchor.addEventListener("click", () => {
+              const href = anchor instanceof HTMLAnchorElement ? anchor.href : "";
+
+              if (href) {
+                copyText(href);
+              }
+            });
+          });
+        }
+
+        function bindCodeBlocks(root) {
+          root.querySelectorAll(".prose pre.code-block").forEach((pre) => {
+            if (!(pre instanceof HTMLElement) || pre.dataset.enhanced === "true") {
+              return;
+            }
+
+            pre.dataset.enhanced = "true";
+
+            const wrapper = document.createElement("div");
+            wrapper.className = "code-frame";
+            pre.parentNode?.insertBefore(wrapper, pre);
+            wrapper.appendChild(pre);
+
+            const title = pre.dataset.codeTitle;
+
+            if (title) {
+              const label = document.createElement("div");
+              label.className = "code-frame__title";
+              label.textContent = title;
+              wrapper.appendChild(label);
+            }
+
+            const button = document.createElement("button");
+            button.className = "code-frame__copy";
+            button.type = "button";
+            button.textContent = "copy";
+            button.setAttribute("aria-label", "Copy code");
+            wrapper.appendChild(button);
+
+            button.addEventListener("click", async () => {
+              const code = pre.querySelector("code")?.textContent ?? "";
+
+              if (await copyText(code)) {
+                button.textContent = "copied";
+                setTimeout(() => {
+                  button.textContent = "copy";
+                }, 1500);
+              } else {
+                button.textContent = "failed";
+                setTimeout(() => {
+                  button.textContent = "copy";
+                }, 1500);
+              }
+            });
+          });
+        }
+
+        function bindSidenotes(root) {
+          root.querySelectorAll("a[data-footnote-ref]").forEach((reference) => {
+            const sup = reference.closest("sup");
+
+            if (!sup || sup.parentElement?.classList.contains("footnote-callout")) {
+              return;
+            }
+
+            const href = reference.getAttribute("href");
+            const id = href?.startsWith("#") ? href.slice(1) : "";
+            const note = id ? root.querySelector(`#${CSS.escape(id)}`) : null;
+
+            if (!note) {
+              return;
+            }
+
+            const clone = note.cloneNode(true);
+
+            if (!(clone instanceof HTMLElement)) {
+              return;
+            }
+
+            clone.querySelectorAll("[data-footnote-backref]").forEach((backref) => backref.remove());
+
+            const wrapper = document.createElement("span");
+            wrapper.className = "footnote-callout";
+            sup.parentNode?.insertBefore(wrapper, sup);
+            wrapper.appendChild(sup);
+
+            const sidenote = document.createElement("span");
+            sidenote.className = "sidenote";
+            sidenote.setAttribute("role", "note");
+            sidenote.innerHTML = `<span class="sidenote__number">${reference.textContent ?? ""}</span>${clone.innerHTML}`;
+            wrapper.appendChild(sidenote);
+          });
+
+          positionSidenotes(root);
+        }
+
+        function positionSidenotes(root) {
+          root.querySelectorAll(".footnote-callout").forEach((wrapper) => {
+            if (!(wrapper instanceof HTMLElement)) {
+              return;
+            }
+
+            const sidenote = wrapper.querySelector(".sidenote");
+            const prose = wrapper.closest(".prose");
+
+            if (!(sidenote instanceof HTMLElement) || !(prose instanceof HTMLElement)) {
+              return;
+            }
+
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const proseRect = prose.getBoundingClientRect();
+            sidenote.style.left = `${proseRect.right - wrapperRect.left + 32}px`;
+          });
+        }
+
+        function enhanceProse() {
+          const root = document;
+          bindHeadingAnchors(root);
+          bindCodeBlocks(root);
+          bindSidenotes(root);
+          bindOptionalImages(root);
+          bindCopyButtons(root);
+        }
+
+        function bindOptionalImages(root) {
+          root.querySelectorAll("img[data-optional-image]").forEach((image) => {
+            if (!(image instanceof HTMLImageElement) || image.dataset.optionalBound === "true") {
+              return;
+            }
+
+            image.dataset.optionalBound = "true";
+
+            if (image.complete && image.naturalWidth === 0) {
+              image.hidden = true;
+            }
+
+            image.addEventListener("error", () => {
+              image.hidden = true;
+            });
+          });
+        }
+
+        function bindCopyButtons(root) {
+          root.querySelectorAll("[data-copy-text]").forEach((button) => {
+            if (!(button instanceof HTMLButtonElement) || button.dataset.copyBound === "true") {
+              return;
+            }
+
+            button.dataset.copyBound = "true";
+            const idleLabel = button.textContent ?? "copy";
+
+            button.addEventListener("click", async () => {
+              const text = button.dataset.copyText ?? "";
+
+              if (await copyText(text)) {
+                button.textContent = "copied";
+              } else {
+                button.textContent = "failed";
+              }
+
+              setTimeout(() => {
+                button.textContent = idleLabel;
+              }, 1500);
+            });
+          });
+        }
+
+        enhanceProse();
+        document.addEventListener("astro:page-load", enhanceProse);
+        window.addEventListener("resize", () => positionSidenotes(document));
+      })();
+    </script>
+    <script is:inline>
+      (() => {
+        const categories = ["Thoughts", "Notes", "Bookmarks", "Projects", "Books"];
+        const palette = document.querySelector("[data-command-palette]");
+        const input = document.querySelector("[data-command-input]");
+        const results = document.querySelector("[data-command-results]");
+        const closeTargets = document.querySelectorAll("[data-command-close]");
+        let items = [];
+        let filteredItems = [];
+        let activeIndex = 0;
+        let loaded = false;
+
+        if (!(palette instanceof HTMLElement) || !(input instanceof HTMLInputElement) || !(results instanceof HTMLElement)) {
+          return;
+        }
+
+        async function loadItems() {
+          if (loaded) {
+            return;
+          }
+
+          const response = await fetch("/command-palette.json");
+          items = await response.json();
+          filteredItems = items;
+          loaded = true;
+        }
+
+        function matches(item, query) {
+          if (!query) {
+            return true;
+          }
+
+          return item.keywords.includes(query);
+        }
+
+        function resultButton(item, index) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "command-result";
+          button.dataset.index = String(index);
+          button.setAttribute("aria-selected", String(index === activeIndex));
+          button.innerHTML = `<span class="command-result__title"></span><span class="command-result__snippet"></span><span class="command-result__category"></span>`;
+          const title = button.querySelector(".command-result__title");
+          const snippet = button.querySelector(".command-result__snippet");
+          const category = button.querySelector(".command-result__category");
+
+          if (title) {
+            title.textContent = item.title;
+          }
+
+          if (snippet) {
+            snippet.textContent = item.snippet;
+          }
+
+          if (category) {
+            category.textContent = item.category;
+          }
+
+          button.addEventListener("click", () => openItem(item));
+          return button;
+        }
+
+        function render() {
+          results.textContent = "";
+
+          if (filteredItems.length === 0) {
+            const empty = document.createElement("p");
+            empty.className = "command-empty";
+            empty.textContent = "Nothing matches.";
+            results.appendChild(empty);
+            return;
+          }
+
+          categories.forEach((category) => {
+            const groupItems = filteredItems.filter((item) => item.category === category);
+
+            if (groupItems.length === 0) {
+              return;
+            }
+
+            const group = document.createElement("section");
+            group.className = "command-group";
+            const heading = document.createElement("h3");
+            heading.textContent = category;
+            group.appendChild(heading);
+
+            groupItems.forEach((item) => {
+              const index = filteredItems.indexOf(item);
+              group.appendChild(resultButton(item, index));
+            });
+
+            results.appendChild(group);
+          });
+        }
+
+        function filterItems() {
+          const query = input.value.trim().toLowerCase();
+          filteredItems = items.filter((item) => matches(item, query)).slice(0, 12);
+          activeIndex = 0;
+          render();
+        }
+
+        function syncActiveResult() {
+          results.querySelectorAll(".command-result").forEach((button) => {
+            if (!(button instanceof HTMLElement)) {
+              return;
+            }
+
+            const selected = button.dataset.index === String(activeIndex);
+            button.setAttribute("aria-selected", String(selected));
+
+            if (selected) {
+              button.scrollIntoView({ block: "nearest" });
+            }
+          });
+        }
+
+        function openItem(item) {
+          closePalette();
+
+          if (item.url.startsWith("http")) {
+            window.location.href = item.url;
+          } else {
+            window.location.assign(item.url);
+          }
+        }
+
+        async function openPalette() {
+          await loadItems();
+          palette.hidden = false;
+          document.documentElement.dataset.commandOpen = "true";
+          input.value = "";
+          filterItems();
+          requestAnimationFrame(() => input.focus());
+        }
+
+        function closePalette() {
+          palette.hidden = true;
+          delete document.documentElement.dataset.commandOpen;
+        }
+
+        input.addEventListener("input", filterItems);
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            activeIndex = Math.min(filteredItems.length - 1, activeIndex + 1);
+            syncActiveResult();
+          } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            activeIndex = Math.max(0, activeIndex - 1);
+            syncActiveResult();
+          } else if (event.key === "Enter") {
+            event.preventDefault();
+            const item = filteredItems[activeIndex];
+
+            if (item) {
+              openItem(item);
+            }
+          } else if (event.key === "Escape") {
+            closePalette();
+          }
+        });
+
+        closeTargets.forEach((target) => target.addEventListener("click", closePalette));
+        document.addEventListener("keydown", (event) => {
+          const isShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
+
+          if (isShortcut) {
+            event.preventDefault();
+            openPalette();
+          } else if (event.key === "Escape" && !palette.hidden) {
+            closePalette();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
