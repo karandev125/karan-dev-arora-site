@@ -1,0 +1,33 @@
+---
+title: EcoEats
+description: A zero-hunger food logistics app for routing surplus meals before freshness and expiry windows close.
+category: live
+year: 2026
+role: solo
+status: live
+tech:
+  - React
+  - Vite
+  - Express
+  - MongoDB
+  - Leaflet
+links:
+  - label: live
+    href: https://eco-food-logistics-theta.vercel.app/
+  - label: repo
+    href: https://github.com/karandev125/eco-eats-zero-hunger
+---
+
+EcoEats is a food rescue logistics app built around the Zero Hunger problem space. Donors can list surplus food, receivers can discover and claim it, and the backend evaluates whether a pickup and delivery can happen before the food's real delivery window closes.
+
+## Shape
+
+The project is split into a Vite React frontend and an Express backend. The interface covers listing food, searching available items, order and dashboard flows, route analysis, and a freshness lab for simulating perishable-food conditions.
+
+## What It Explores
+
+EcoEats treats freshness as an allocation signal instead of a static label. Temperature, humidity, and gas readings can update a food item's freshness score, safety state, and effective expiry time. Those signals feed into route feasibility and demand-center matching, so urgent food can be sent where it is still useful.
+
+## Build Notes
+
+The backend uses MongoDB through Mongoose for users, food items, demand centers, telemetry imports, and allocation data. It also includes services for freshness scoring, route-aware allocation, IoT telemetry, Google Sheets telemetry import, and demand-center matching. The frontend uses React, React Router, Axios, Leaflet, and Leaflet Routing Machine for the operational surface.

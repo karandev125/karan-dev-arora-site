@@ -1,0 +1,32 @@
+---
+title: RakshaNav
+description: A safe urban navigation MVP that maps streetlight gaps into safer citizen routes and civic repair signals.
+category: live
+year: 2026
+role: solo
+status: live
+tech:
+  - React
+  - Vite
+  - Express
+  - MapLibre GL
+links:
+  - label: live
+    href: https://rakshanav.vercel.app/
+  - label: repo
+    href: https://github.com/karandev125/raksha-nav
+---
+
+RakshaNav is a dual-view urban safety prototype for treating unsafe streets as an infrastructure problem. Instead of only routing people around danger, it maps darkness, low lux readings, and broken streetlight zones so city teams can see where the public realm needs repair.
+
+## Shape
+
+The app has a citizen-facing mobility view and a government-facing infrastructure view. Citizens compare safer and riskier routes, while the city dashboard shows dark zones, citizen reports, severity filters, and work-order actions for streetlight repair.
+
+## What It Explores
+
+The useful idea is that a phone can become a lightweight civic sensor. Ambient light readings can improve route safety for users in the short term while producing a public-infrastructure signal for municipal teams in the long term.
+
+## Build Notes
+
+The prototype uses React and Vite for the interface, MapLibre GL for map rendering, and an Express backend for routes, darkness zones, sensor reports, stats, and work orders. The demo data focuses on Bangalore and keeps the infrastructure-deficit story visible from both sides of the product.
